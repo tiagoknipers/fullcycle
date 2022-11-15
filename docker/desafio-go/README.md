@@ -30,7 +30,7 @@ user@desktop:~$ docker logs docker-desafio-go-fullcycle
 Fullcycle rockz
 ```
 
-# You can get my imagem from github
+# You can get my imagem from dockerhub
 
 ```console
 user@desktop:~$ docker push knipers/docker-desafio-go-fullcycle:latest
