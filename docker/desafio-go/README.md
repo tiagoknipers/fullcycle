@@ -28,8 +28,6 @@ Fullcycle rockz
 
 # You can get my imagem from github
 
-In this address: https://hub.docker.com/repository/docker/knipers/docker-desafio-go-fullcycle
-
 ```console
 user@desktop:~$ docker push knipers/docker-desafio-go-fullcycle:latest
 ```
