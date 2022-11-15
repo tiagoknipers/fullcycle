@@ -1,3 +1,7 @@
+# Challenge
+
+Make a tiny golang application running in a docker image with less than 2mb, publish the code on github and the image on dockerhub.
+
 # How to build it
 Open your console and run:
 
