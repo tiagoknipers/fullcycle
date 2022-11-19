@@ -8,17 +8,8 @@ const config = {
     database: 'nodedb'
 };
 const mysql = require('mysql')
-const connection = mysql.createConnection(config)
-
-/*
-let sql = "INSERT INTO people SET name = ?";
-connection.query(sql, [ random_name() ],  function(err, rows) {});
-connection.query(sql, [ random_name() ],  function(err, rows) {});
-connection.end()
-*/
 
 app.get('/', (req,res) => {
-    //res.send('<h1>Testando...</h1>')    
     insertPeople(res);
 })
 
