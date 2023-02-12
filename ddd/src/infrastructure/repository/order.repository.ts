@@ -26,37 +26,66 @@ export default class OrderRepository implements OrderRepositoryInterface {
     }
 
     async update(entity: Order): Promise<void> {
-      await OrderModel.update(
-        {
-          customer_id: entity.customerId,
-          total: entity.total(),
-          items: entity.items.map((item) => ({
-            id: item.id,
-            name: item.name,
-            price: item.price,
-            product_id: item.productId,
-            quantity: item.quantity,
-          })),
-        },
-        {
-          where: {
-            id: entity.id
-          }
-        }
-      );
-    }
+      const sequelize = OrderModel.sequelize;
 
+      await sequelize.transaction(async (t) => {
+        await OrderItemModel.destroy({
+          where: { order_id: entity.id },
+          transaction: t,
+        });
+
+        const items = entity.items.map((item) => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          product_id: item.productId,
+          quantity: item.quantity,
+          order_id: entity.id,
+        }));
+
+        await OrderItemModel.bulkCreate(items, { transaction: t });
+
+        await OrderModel.update(
+          { total: entity.total() },
+          { where: { id: entity.id }, transaction: t }
+        );
+      });
+    }
+    
     async find(id: string): Promise<Order> {
-      const orderModel = await OrderModel.findOne({ where: { id } });
-      return new Order(orderModel.id, orderModel.customer_id, orderModel.items.map((item) => 
-        new OrderItem(item.id, item.name, item.price, item.product_id, item.quantity))
-      );
+      let orderModel;
+
+      try {
+        orderModel = await OrderModel.findOne({
+          where: {
+            id,
+          },
+          rejectOnEmpty: true,
+          include: ["items"]
+        });        
+      } catch (error) {
+          throw new Error("Order not found");
+      } 
+        
+      let orderItens = orderModel.items.map(orderItemModel => 
+        new OrderItem(orderItemModel.id, orderItemModel.name, orderItemModel.price, orderItemModel.product_id, orderItemModel.quantity));
+
+      const order = new Order(id, orderModel.customer_id, orderItens);             
+      return order;  
     }
   
     async findAll(): Promise<Order[]> {
-      const orderModels = await OrderModel.findAll();
-      return orderModels.map((orderModels) =>
-        new Order(orderModels.id, orderModels.customer_id, orderModels.items.map((item) => 
-          new OrderItem(item.id, item.name, item.price, item.product_id, item.quantity))));
+      const orders = await OrderModel.findAll({ include: [{ model: OrderItemModel }] })  
+        
+      return orders.map(order => {
+        const orderItems: Array<OrderItem> = []
+  
+        for (const iterator of order.items) {
+          orderItems.push(new OrderItem(iterator.id, iterator.name, iterator.price, iterator.product_id, iterator.quantity))
+        }
+  
+        return new Order(order.id, order.customer_id, orderItems)
+      });
     }
+
   }
